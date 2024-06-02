@@ -1,6 +1,6 @@
 [package]
 name = "mexc-rust-sdk"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
@@ -9,3 +9,6 @@ hmac = "0.12.1"
 anyhow = "1.0.86"
 tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread","full"] }
 serde = { version = "1.0.203", features = ["derive"] }
+hex = "0.4.3"
+sha2 = "0.10.8"
+serde_json = "1.0.117"
