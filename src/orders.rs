@@ -89,7 +89,7 @@ impl Mexc {
 
         let order_request = format!("symbol={symbol}&side={side}&type={order_type}&quantity={quantity}&price={price}&recvWindow={recv_window}&timestamp={timestamp}");
 
-        let signed_order = self.sign_request(order_request).unwrap();
+        let signed_order = self.sign_request(order_request)?;
         //println!("{}",signed_order);
 
         let url = format!("{PROD_API_URL}/api/v3/order?{signed_order}");
