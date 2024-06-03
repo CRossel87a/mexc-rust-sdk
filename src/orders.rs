@@ -30,7 +30,7 @@ impl std::fmt::Display for OrderType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum OrderSide {
     BUY,
     SELL
