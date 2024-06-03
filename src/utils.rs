@@ -1,4 +1,5 @@
 use serde::Deserializer;
+use serde::Serializer;
 use serde::de::{self, Visitor};
 use std::fmt;
 use std::env;
@@ -34,9 +35,21 @@ where
     deserializer.deserialize_str(StringToF64Visitor)
 }
 
+pub fn serialize_f64_as_string<S>(x: &f64, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_str(&x.to_string())
+}
+
 
 pub fn unlock_keys() -> anyhow::Result<(String, String)>{
     let key: String = env::var("mexcn_accesskey")?;
     let secret: String = env::var("mexn_secretkey")?;
     Ok((key, secret))
+}
+
+pub fn round(x: f64, decimals: u32) -> f64 {
+    let y = 10i64.pow(decimals) as f64;
+    (x * y).floor() / y
 }
