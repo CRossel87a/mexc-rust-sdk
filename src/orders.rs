@@ -210,12 +210,15 @@ impl Mexc {
 
         if resp.status() == StatusCode::OK {
 
-            let res: Result<Vec<OrderReceipt>, _> = resp.json().await;
+
+            let txt = resp.text().await?;
+        
+            let res: Result<Vec<OrderReceipt>, _> = serde_json::from_str(&txt);
 
             match res {
                 Ok(receipts) => Ok(receipts),
                 Err(err) => {
-                    bail!(err.to_string());
+                    bail!("Err: {err} on {txt}");
                 }
             }
         } else {
