@@ -56,7 +56,7 @@ pub enum OrderStatus {
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
-pub struct OrderReceipe {
+pub struct OrderReceipt {
     pub symbol: String,
     #[serde(rename = "orderId")]
     pub order_id: String,
@@ -142,7 +142,7 @@ impl Mexc {
         Ok(resp)
     }
 
-    pub async fn submit_order(&self, symbol: &str, side: OrderSide, order_type: OrderType, price: f64, quantity: f64, recv_window: Option<u64>) -> anyhow::Result<OrderReceipe> {
+    pub async fn submit_order(&self, symbol: &str, side: OrderSide, order_type: OrderType, price: f64, quantity: f64, recv_window: Option<u64>) -> anyhow::Result<OrderReceipt> {
         let recv_window = recv_window.unwrap_or(DEFAULT_RECV_WINDOW);
         let timestamp = get_timestamp();
 
@@ -152,7 +152,7 @@ impl Mexc {
         let resp: Response = self.post_signed(&url).await?;
 
         if resp.status() == StatusCode::OK {
-            let receipe: OrderReceipe = resp.json().await?;
+            let receipe: OrderReceipt = resp.json().await?;
             Ok(receipe)
         } else {
             let err = resp.text().await?;
@@ -160,7 +160,7 @@ impl Mexc {
         }
     }
 
-    pub async fn batch_orders(&self, orders: Vec<Order>, recv_window: Option<u64>) -> anyhow::Result<Vec<OrderReceipe>> {
+    pub async fn batch_orders(&self, orders: Vec<Order>, recv_window: Option<u64>) -> anyhow::Result<Vec<OrderReceipt>> {
         if orders.is_empty() {
             bail!("No orders in vector");
         }
@@ -182,7 +182,7 @@ impl Mexc {
         let resp: Response = self.post_signed(&url).await?;
 
         if resp.status() == StatusCode::OK {
-            let receipes: Vec<OrderReceipe> = resp.json().await?;
+            let receipes: Vec<OrderReceipt> = resp.json().await?;
             Ok(receipes)
         } else {
             let err = resp.text().await?;

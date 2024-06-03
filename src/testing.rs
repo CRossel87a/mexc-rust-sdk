@@ -3,14 +3,11 @@
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
-
-    use tokio::time;
-
     use crate::orders::CancelledOrder;
     use crate::orders::Order;
     use crate::orders::OrderSide;
     use crate::orders::OrderType;
-    use crate::orders::OrderReceipe;
+    use crate::orders::OrderReceipt;
     use crate::utils::round;
     use crate::{utils::unlock_keys, Mexc};
 
@@ -73,7 +70,7 @@ mod tests {
     pub fn test_decode_order_receipe() {
         let or = r#"{"symbol":"PLSUSDT","orderId":"C02__426060921085927424065","orderListId":-1,"price":"0.00009512","origQty":"599971.13","type":"MARKET","side":"BUY","transactTime":1717363075282}"#;
 
-        let receipe: OrderReceipe = serde_json::from_str(or).unwrap();
+        let receipe: OrderReceipt = serde_json::from_str(or).unwrap();
         dbg!(receipe);
     }
 
