@@ -5,6 +5,7 @@ mod tests {
     use std::time::Duration;
     use crate::orders::CancelledOrder;
     use crate::orders::Order;
+    use crate::orders::OrderQuery;
     use crate::orders::OrderSide;
     use crate::orders::OrderType;
     use crate::orders::OrderReceipt;
@@ -147,4 +148,19 @@ mod tests {
         dbg!(res);
     }
 
+    #[tokio::test]
+    pub async fn test_open_orders() {
+        let (key, secret) = unlock_keys().unwrap();
+        let client = Mexc::new(Some(key),Some(secret),None).unwrap();
+
+        let q = 599971.13;
+
+        let order_1 = client.submit_order("PLSUSDT", OrderSide::SELL, OrderType::LIMIT, 0.00009512, round(q/2.0, 2), None).await.unwrap();
+        dbg!(&order_1);
+
+        sleep(0.4).await;
+
+        let orders = client.get_open_orders("PLSUSDT", None).await.unwrap();
+        dbg!(orders);
+    }
 }

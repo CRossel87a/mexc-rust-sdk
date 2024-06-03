@@ -2,6 +2,7 @@ pub mod utils;
 pub mod market;
 pub mod orders;
 pub mod testing;
+pub mod account;
 
 
 use std::time::{Duration, Instant};

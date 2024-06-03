@@ -111,9 +111,36 @@ pub struct Order {
     pub order_type: OrderType
 }
 
+#[allow(dead_code)]
+#[derive(Deserialize, Debug)]
+pub struct OrderQuery {
+    pub symbol: String,
+    #[serde(rename = "orderId")]
+    pub order_id: String,
+
+    #[serde(deserialize_with = "parse_string_to_f64")]
+    pub price: f64,
+
+    #[serde(rename = "origQty", deserialize_with = "parse_string_to_f64")]
+    pub orig_qty: f64,
+
+    #[serde(rename = "executedQty", deserialize_with = "parse_string_to_f64")]
+    pub exec_qty: f64,
+
+    #[serde(rename = "type")]
+    pub order_type: OrderType,
+    pub side: OrderSide,
+
+    #[serde(rename = "time")]
+    pub created_time: u128,
+
+    #[serde(rename = "updateTime")]
+    pub last_update: Option<u128>,
+}
+
 impl Mexc {
 
-    fn sign_request(&self, order_details: String) -> anyhow::Result<String> {
+    pub fn sign_request(&self, order_details: String) -> anyhow::Result<String> {
         let secret_key = self.api_secret.as_ref().ok_or_else(|| anyhow!("Missing secret key"))?;
         let mut signed_key = Hmac::<Sha256>::new_from_slice(secret_key.as_bytes())?;
         signed_key.update(order_details.as_bytes());
@@ -220,6 +247,25 @@ impl Mexc {
         if resp.status() == StatusCode::OK {
             let cancelled_order: CancelledOrder = resp.json().await?;
             Ok(cancelled_order)
+        } else {
+            let err = resp.text().await?;
+            bail!(err);
+        }
+    }
+
+    pub async fn get_open_orders(&self, symbol: &str,recv_window: Option<u64>) -> anyhow::Result<Vec<OrderQuery>> {
+
+        let recv_window = recv_window.unwrap_or(DEFAULT_RECV_WINDOW);
+        let timestamp = get_timestamp();
+
+        let order_request = format!("symbol={symbol}&recvWindow={recv_window}&timestamp={timestamp}");
+        let signed_order = self.sign_request(order_request)?;
+        let url = format!("{PROD_API_URL}/api/v3/openOrders?{signed_order}");
+        let resp: Response = self.get_signed(&url).await?;
+
+        if resp.status() == StatusCode::OK {
+            let orders: Vec<OrderQuery> = resp.json().await?;
+            Ok(orders)
         } else {
             let err = resp.text().await?;
             bail!(err);
