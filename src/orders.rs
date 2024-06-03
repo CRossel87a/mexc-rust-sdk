@@ -209,8 +209,15 @@ impl Mexc {
         let resp: Response = self.post_signed(&url).await?;
 
         if resp.status() == StatusCode::OK {
-            let receipes: Vec<OrderReceipt> = resp.json().await?;
-            Ok(receipes)
+
+            let res: Result<Vec<OrderReceipt>, _> = resp.json().await;
+
+            match res {
+                Ok(receipts) => Ok(receipts),
+                Err(err) => {
+                    bail!(err.to_string());
+                }
+            }
         } else {
             let err = resp.text().await?;
             bail!(err);

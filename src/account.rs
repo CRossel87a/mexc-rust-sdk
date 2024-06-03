@@ -3,7 +3,7 @@ use reqwest::{StatusCode, Response};
 use anyhow::{anyhow, bail};
 use serde::Deserialize;
 use crate::utils::get_timestamp;
-use crate::utils::unlock_keys;
+
 use crate::utils::parse_string_to_f64;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -65,6 +65,7 @@ impl Mexc {
 mod tests {
 
     use super::*;
+    use crate::utils::unlock_keys;
 
     #[tokio::test]
     pub async fn test_get_account() {
