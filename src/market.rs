@@ -24,70 +24,70 @@ pub struct ExchangeInfo {
 #[derive(Deserialize, Debug)]
 pub struct SymbolInfo {
     #[serde(rename = "baseAsset")]
-    base_asset: String,
+    pub base_asset: String,
     
     #[serde(rename = "baseAssetPrecision")]
-    base_asset_precision: u32,
+    pub base_asset_precision: u32,
     
     #[serde(rename = "baseCommissionPrecision")]
-    base_commission_precision: u32,
+    pub base_commission_precision: u32,
     
     #[serde(rename = "baseSizePrecision", deserialize_with = "parse_string_to_f64")]
-    base_size_precision: f64,
+    pub base_size_precision: f64,
     
     #[serde(rename = "filters")]
-    filters: Vec<String>,
+    pub filters: Vec<String>,
     
     #[serde(rename = "fullName")]
-    full_name: String,
+    pub full_name: String,
     
     #[serde(rename = "isMarginTradingAllowed")]
-    is_margin_trading_allowed: bool,
+    pub is_margin_trading_allowed: bool,
     
     #[serde(rename = "isSpotTradingAllowed")]
-    is_spot_trading_allowed: bool,
+    pub is_spot_trading_allowed: bool,
     
     #[serde(rename = "makerCommission", deserialize_with = "parse_string_to_f64")]
-    maker_commission: f64,
+    pub maker_commission: f64,
     
     #[serde(rename = "maxQuoteAmount", deserialize_with = "parse_string_to_f64")]
-    max_quote_amount: f64,
+    pub max_quote_amount: f64,
     
     #[serde(rename = "maxQuoteAmountMarket", deserialize_with = "parse_string_to_f64")]
-    max_quote_amount_market: f64,
+    pub max_quote_amount_market: f64,
     
     #[serde(rename = "orderTypes")]
-    order_types: Vec<String>,
+    pub order_types: Vec<String>,
     
     #[serde(rename = "permissions")]
-    permissions: Vec<String>,
+    pub permissions: Vec<String>,
     
     #[serde(rename = "quoteAmountPrecision", deserialize_with = "parse_string_to_f64")]
-    quote_amount_precision: f64,
+    pub quote_amount_precision: f64,
     
     #[serde(rename = "quoteAmountPrecisionMarket", deserialize_with = "parse_string_to_f64")]
-    quote_amount_precision_market: f64,
+    pub quote_amount_precision_market: f64,
     
     #[serde(rename = "quoteAsset")]
-    quote_asset: String,
+    pub quote_asset: String,
     
     #[serde(rename = "quoteAssetPrecision")]
-    quote_asset_precision: u32,
+    pub quote_asset_precision: u32,
     
     #[serde(rename = "quoteCommissionPrecision")]
-    quote_commission_precision: u32,
+    pub quote_commission_precision: u32,
     
     #[serde(rename = "quotePrecision")]
-    quote_precision: u32,
+    pub quote_precision: u32,
     
     #[serde(rename = "status")]
-    status: String,
+    pub status: String,
     
     #[serde(rename = "symbol")]
-    symbol: String,
+    pub symbol: String,
     
     #[serde(rename = "takerCommission", deserialize_with = "parse_string_to_f64")]
-    taker_commission: f64,
+    pub taker_commission: f64,
 }
 
 #[derive(Debug)]
