@@ -2,6 +2,8 @@
 name = "mexc-rust-sdk"
 version = "0.5.0"
 edition = "2021"
+description = "An unofficial library for interacting with the Mexc API"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 reqwest = { version = "0.12.4", features = ["json"] }
