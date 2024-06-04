@@ -149,7 +149,7 @@ impl Mexc {
         Ok(signed_order_details)
     }
 
-    async fn post_signed(&self, url: &str) -> anyhow::Result<Response> {
+    pub async fn post_signed(&self, url: &str) -> anyhow::Result<Response> {
         let api_key = self.api_key.as_ref().ok_or_else(|| anyhow!("Missing api key"))?;
 
         let resp = self.client
@@ -159,7 +159,17 @@ impl Mexc {
         Ok(resp)
     }
 
-    async fn delete_signed(&self, url: &str) -> anyhow::Result<Response> {
+    pub async fn put_signed(&self, url: &str) -> anyhow::Result<Response> {
+        let api_key = self.api_key.as_ref().ok_or_else(|| anyhow!("Missing api key"))?;
+
+        let resp = self.client
+        .put(url)
+        .header("X-MEXC-APIKEY", api_key)
+        .send().await?;
+        Ok(resp)
+    }
+
+    pub async fn delete_signed(&self, url: &str) -> anyhow::Result<Response> {
         let api_key = self.api_key.as_ref().ok_or_else(|| anyhow!("Missing api key"))?;
         
         let resp = self.client
