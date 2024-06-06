@@ -10,7 +10,7 @@ pub const DEFAULT_RECV_WINDOW: u64 = 5000;
 
 
 #[allow(non_camel_case_types)]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum OrderType {
     LIMIT,
     MARKET,
