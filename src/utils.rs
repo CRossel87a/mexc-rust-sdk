@@ -1,38 +1,25 @@
 use serde::Deserializer;
 use serde::Serializer;
-use serde::de::{self, Visitor};
-use std::fmt;
 use std::env;
 use std::time::{SystemTime, UNIX_EPOCH};
-
+use serde_json::Value;
+use serde::Deserialize;
 
 pub fn get_timestamp() -> u128 {
     SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
 }
 
-
 pub fn parse_string_to_f64<'de, D>(deserializer: D) -> Result<f64, D::Error>
 where
     D: Deserializer<'de>,
 {
-    struct StringToF64Visitor;
-
-    impl<'de> Visitor<'de> for StringToF64Visitor {
-        type Value = f64;
-
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-            formatter.write_str("a string that can be parsed to a f64")
-        }
-
-        fn visit_str<E>(self, value: &str) -> Result<f64, E>
-        where
-            E: de::Error,
-        {
-            value.parse::<f64>().map_err(de::Error::custom)
-        }
+    let value: Value = Deserialize::deserialize(deserializer)?;
+    match value {
+        Value::String(s) => s.parse::<f64>().map_err(serde::de::Error::custom),
+        Value::Number(n) => n.as_f64().ok_or_else(|| serde::de::Error::custom("Invalid number")),
+        Value::Null => Ok(0.0), // or handle null value as you need
+        _ => Err(serde::de::Error::custom("Invalid type")),
     }
-
-    deserializer.deserialize_str(StringToF64Visitor)
 }
 
 pub fn serialize_f64_as_string<S>(x: &f64, serializer: S) -> Result<S::Ok, S::Error>

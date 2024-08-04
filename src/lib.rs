@@ -3,15 +3,14 @@ pub mod market;
 pub mod orders;
 pub mod testing;
 pub mod account;
-
+pub mod futures;
 
 use std::time::{Duration, Instant};
 use reqwest::Client;
 use serde::Deserialize;
 
-
-
 pub const PROD_API_URL: &str = "https://api.mexc.com";
+
 
 pub struct Mexc {
     pub api_key: Option<String>,
@@ -59,10 +58,9 @@ impl Mexc {
     pub async fn ping(&self) -> anyhow::Result<Duration> {
         let url = format!("{PROD_API_URL}/api/v3/ping");
 
-        let t0 = Instant::now();
+        let inst = Instant::now();
         let _ = self.client.get(url).send().await?;
-        let t1 = Instant::now();
 
-        Ok(t1 - t0)
+        Ok(inst.elapsed())
     }
 }

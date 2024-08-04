@@ -5,7 +5,6 @@ mod tests {
     use std::time::Duration;
     use crate::orders::CancelledOrder;
     use crate::orders::Order;
-    use crate::orders::OrderQuery;
     use crate::orders::OrderSide;
     use crate::orders::OrderType;
     use crate::orders::OrderReceipt;
@@ -35,7 +34,6 @@ mod tests {
         dbg!(dur);
     }
 
-    
     #[tokio::test]
     pub async fn test_symbol_info() {
         let client = Mexc::new(None,None,None).unwrap();

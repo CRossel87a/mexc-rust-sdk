@@ -149,6 +149,16 @@ impl Mexc {
         Ok(signed_order_details)
     }
 
+    /*
+    pub fn get_blank_signature(&self) -> anyhow::Result<String> {
+        let secret_key = self.api_secret.as_ref().ok_or_else(|| anyhow!("Missing secret key"))?;
+        let signed_key = Hmac::<Sha256>::new_from_slice(secret_key.as_bytes())?;
+        let signature = hex::encode(signed_key.finalize().into_bytes());
+        let signed_order_details: String = format!("signature={}", signature);
+        Ok(signed_order_details)
+    }
+    */
+    
     pub async fn post_signed(&self, url: &str) -> anyhow::Result<Response> {
         let api_key = self.api_key.as_ref().ok_or_else(|| anyhow!("Missing api key"))?;
 
