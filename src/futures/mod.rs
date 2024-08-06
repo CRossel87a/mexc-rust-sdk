@@ -482,8 +482,8 @@ mod tests {
 
         let client = MexcFutures::new(Some(key),Some(secret),Some(web_token), None).unwrap();
 
-        let symbol = "BTC_USDT";
-        let q = 0.005;
+        let symbol = "ETH_USDT";
+        let q = 0.02;
         let price = None; //Some(3650.13);
 
         let i = client.get_contract_details(symbol).await.unwrap();

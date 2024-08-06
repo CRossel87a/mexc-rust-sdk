@@ -348,7 +348,7 @@ pub struct FuturesOrder {
     #[serde(rename = "dealAvgPriceStr")]
     pub deal_avg_price_str: String,
     #[serde(rename = "dealVol")]
-    pub deal_vol: i64,
+    pub deal_vol: u64,
     #[serde(rename = "errorCode")]
     pub error_code: i64,
     #[serde(rename = "externalOid")]
