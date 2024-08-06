@@ -25,29 +25,6 @@ pub struct MexcFutures {
     pub client: Client
 }
 
-#[repr(u64)]
-pub enum OrderDirection {
-    OpenLong = 1,
-    CloseShort = 2,
-    OpenShort = 3,
-    CloseLong = 4,
-}
-
-#[repr(u64)]
-pub enum OpenType {
-    Isolated = 1,
-    Cross = 2
-}
-
-#[repr(u64)]
-pub enum OrderType {
-    Limit = 1,
-    PostOnly = 2,
-    TransactOrCancelInstantly = 3,
-    TransactCompletelyOrCancelCompletely = 4,
-    Market = 5,
-    ConvertMarketToCurrentPrice = 6
-}
 
 fn get_md5(string: &str) -> String {
     let mut hasher = Md5::new();
@@ -108,7 +85,7 @@ impl MexcFutures {
 
         let url = format!("{}/api/v1/private/account/assets", FUTURES_API_URL);
 
-        let headers = self.generate_signed_header()?;
+        let headers = self.generate_signed_header(None)?;
 
         let resp: Response = self.client.get(url).headers(headers).send().await?;
 
@@ -130,10 +107,10 @@ impl MexcFutures {
 
     }
 
-    fn generate_signed_header(&self) -> anyhow::Result<HeaderMap> {
+    fn generate_signed_header(&self, sign_params: Option<&str>) -> anyhow::Result<HeaderMap> {
         let api_key = self.api_key.as_ref().ok_or_else(|| anyhow!("Missing api key"))?;
         let timestamp = get_timestamp();
-        let signature = self.sign_v1(timestamp, None)?;
+        let signature = self.sign_v1(timestamp, sign_params)?;
         let request_time = timestamp.to_string();
 
         let mut headers = HeaderMap::new();
@@ -149,7 +126,7 @@ impl MexcFutures {
         let path = format!("/api/v1/private/account/asset/{}", asset);
         let url = format!("{}{}", FUTURES_API_URL, path);
 
-        let headers = self.generate_signed_header()?;
+        let headers = self.generate_signed_header(None)?;
 
         let resp: Response = self.client.get(url).headers(headers).send().await?;
 
@@ -236,11 +213,45 @@ impl MexcFutures {
         Ok(receipt)
     }
 
+    pub async fn submit_directional_orders(&self, symbol: &str, mut contract_units: u64, price: Option<f64>,leverage: u64, direction: PositionType, open_type: OpenType, order_type: OrderType) -> anyhow::Result<Vec<OrderReceipt>> {
+
+        let open_positions = self.get_open_positions().await?;
+
+        let positions = open_positions.iter().find(|p| p.symbol.eq(symbol) && p.leverage == leverage && p.open_type.eq(&open_type));
+
+        let mut orders = vec![];
+
+        if let Some(position) = positions.filter(|p| p.position_type.ne(&direction)) {
+
+            let side = if direction.eq(&PositionType::Long) { OrderDirection::CloseShort } else { OrderDirection::CloseLong };
+
+            if position.hold_vol >= contract_units {
+                
+                let order = self.submit_order(symbol, contract_units, price, leverage, side, open_type, order_type).await?;
+                orders.push(order);
+                contract_units = 0;
+
+            } else {
+                let order = self.submit_order(symbol, position.hold_vol, price, leverage, side, open_type, order_type).await?;
+                orders.push(order);
+                contract_units -= position.hold_vol;
+            }
+        } 
+
+        if contract_units > 0 {
+            let side = if direction.eq(&PositionType::Long) { OrderDirection::OpenLong } else { OrderDirection::OpenShort };
+            let order = self.submit_order(symbol, contract_units, price, leverage, side, open_type, order_type).await?;
+            orders.push(order);
+        }
+
+        Ok(orders)
+    }
+
     pub async fn get_open_positions(&self) -> anyhow::Result<Vec<FuturesPosition>> {
 
         let url = format!("{}/api/v1/private/position/open_positions", FUTURES_API_URL);
 
-        let headers = self.generate_signed_header()?;
+        let headers = self.generate_signed_header(None)?;
 
         let resp: Response = self.client.get(url).headers(headers).send().await?;
 
@@ -287,6 +298,56 @@ impl MexcFutures {
 
         Ok(detail)
     }
+
+    pub async fn query_order(&self, order_id: &str) -> anyhow::Result<FuturesOrder> {
+
+        let url = format!("{}/api/v1/private/order/get/{order_id}", FUTURES_API_URL);
+
+        let headers = self.generate_signed_header(None)?;
+
+        let resp: Response = self.client.get(url).headers(headers).send().await?;
+
+        let json_str: String = resp.text().await?;
+
+        let resp: FuturesResponse = serde_json::from_str(&json_str)?;
+
+        if !resp.success {
+            bail!("mexc futures err resp: {:?}", resp.message);
+        }
+
+        let order: FuturesOrder = serde_json::from_value(resp.data.context("Expected data field")?)?;
+    
+        Ok(order)
+    }
+    /* 
+    // Does not work... signature verification failed
+    pub async fn query_orders(&self, order_ids: Vec<String>) -> anyhow::Result<Vec<FuturesOrder>> {
+
+        ensure!(order_ids.len() > 0, "No orders");
+
+        let url = format!("{}/api/v1/private/order/batch_query", FUTURES_API_URL);
+
+        let params = json!({
+            "order_ids": order_ids.join(",")
+        });
+
+        let headers = self.generate_signed_header(Some(&params.to_string()))?;
+
+        let resp: Response = self.client.get(url).headers(headers).json(&params).send().await?;
+
+        let json_str: String = resp.text().await?;
+
+        let resp: FuturesResponse = serde_json::from_str(&json_str)?;
+
+        if !resp.success {
+            bail!("mexc futures err resp: {:?}", resp.message);
+        }
+
+        let orders: Vec<FuturesOrder> = serde_json::from_value(resp.data.context("Expected data field")?)?;
+    
+        Ok(orders)
+    }
+    */
 
     /* 
     pub async fn get_all_contract_details(&self) -> anyhow::Result<()> {
@@ -395,8 +456,8 @@ mod tests {
         let client = MexcFutures::new(Some(key),Some(secret),Some(web_token), None).unwrap();
 
         let symbol = "ETH_USDT";
-        let q = 0.01;
-        let price = Some(3650.13);
+        let q = 0.02;
+        let price = None; //Some(3650.13);
 
         let i = client.get_contract_details(symbol).await.unwrap();
 
@@ -404,7 +465,63 @@ mod tests {
 
         println!("contract_units: {contract_units}");
 
-        let receipt = client.submit_order("ETH_USDT", contract_units, price, 4, OrderDirection::OpenShort, OpenType::Cross, OrderType::Limit).await.unwrap();
+        let receipt = client.submit_order(symbol, contract_units, price, 4, OrderDirection::CloseShort, OpenType::Cross, OrderType::Market).await.unwrap();
         dbg!(receipt);
     }
+
+    #[tokio::test]
+    pub async fn test_futures_submit_directional_order() {
+        let (key, secret) = unlock_keys().unwrap();
+
+        // Powershell: $Env:web_token="xxx"
+        let web_token = std::env::var("web_token").unwrap();
+
+        let client = MexcFutures::new(Some(key),Some(secret),Some(web_token), None).unwrap();
+
+        let symbol = "BTC_USDT";
+        let q = 0.0020;
+        let price = None; //Some(3650.13);
+
+        let i = client.get_contract_details(symbol).await.unwrap();
+
+        let contract_units = (q / i.contract_size) as u64;
+
+        println!("contract_units: {contract_units}");
+
+        let receipts = client.submit_directional_orders(symbol, contract_units, price, 4, PositionType::Long, OpenType::Cross, OrderType::Market).await.unwrap();
+        dbg!(receipts);
+    }
+
+    #[tokio::test]
+    pub async fn test_futures_query_order() {
+        let (key, secret) = unlock_keys().unwrap();
+        let client = MexcFutures::new(Some(key),Some(secret),None, None).unwrap();
+
+        // market order 575758889245571072
+        // limit order 575755030422977024
+
+
+        let acc = client.query_order("575758889245571072").await.unwrap();
+        dbg!(acc);
+
+        // deal columns for execute price info
+        // taker_fee: 0.0049071
+    }
+
+    /*
+    #[tokio::test]
+    pub async fn test_futures_query_multiple_order() {
+        let (key, secret) = unlock_keys().unwrap();
+        let client = MexcFutures::new(Some(key),Some(secret),None, None).unwrap();
+
+        // market order 575758889245571072
+        // limit order 575755030422977024
+
+        let orders = vec!["575758889245571072".into()];
+        let acc = client.query_orders(orders).await.unwrap();
+        dbg!(acc);
+
+        // deal columns for execute price info
+        // taker_fee: 0.0049071
+    } */
 }

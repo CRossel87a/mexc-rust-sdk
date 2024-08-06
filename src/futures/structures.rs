@@ -1,5 +1,6 @@
 use serde::Deserialize;
 use serde_json::Value;
+use serde_repr::Deserialize_repr;
 use crate::utils::parse_string_to_f64;
 
 
@@ -74,14 +75,12 @@ pub struct FuturesPosition {
     #[serde(rename = "holdFee", deserialize_with = "parse_string_to_f64")]
     pub hold_fee: f64,
 
-    #[serde(rename = "holdVol", deserialize_with = "parse_string_to_f64")]
-    pub hold_vol: f64,
+    #[serde(rename = "holdVol")]
+    pub hold_vol: u64,
 
     #[serde(deserialize_with = "parse_string_to_f64")]
     pub im: f64,
-
-    #[serde(deserialize_with = "parse_string_to_f64")]
-    pub leverage: f64,
+    pub leverage: u64,
 
     #[serde(rename = "liquidatePrice", deserialize_with = "parse_string_to_f64")]
     pub liquidate_price: f64,
@@ -105,13 +104,13 @@ pub struct FuturesPosition {
     pub open_avg_price_fully_scale: f64,
 
     #[serde(rename = "openType")]
-    pub open_type: i32,
+    pub open_type: OpenType,
 
     #[serde(rename = "positionId")]
     pub position_id: i64,
 
     #[serde(rename = "positionType")]
-    pub position_type: i32,
+    pub position_type: PositionType,
 
     #[serde(rename = "profitRatio", deserialize_with = "parse_string_to_f64")]
     pub profit_ratio: f64,
@@ -297,10 +296,98 @@ pub struct ContractInfo {
     pub vol_unit: f64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct OrderReceipt {
     #[serde(rename = "orderId")]
     pub order_id: String,
     #[serde(rename = "ts")]
     pub timestamp: u128
+}
+
+#[repr(u64)]
+#[derive(Deserialize_repr, Debug, PartialEq, Clone, Copy)]
+pub enum OrderDirection {
+    OpenLong = 1,
+    CloseShort = 2,
+    OpenShort = 3,
+    CloseLong = 4,
+}
+
+#[repr(u64)]
+#[derive(Deserialize_repr, Debug, PartialEq, Clone, Copy)]
+pub enum PositionType {
+    Long = 1,
+    Short = 2,
+}
+
+#[repr(u64)]
+#[derive(Deserialize_repr, Debug, PartialEq, Clone, Copy)]
+pub enum OpenType {
+    Isolated = 1,
+    Cross = 2
+}
+
+#[repr(u64)]
+#[derive(Deserialize_repr, Debug, PartialEq, Clone, Copy)]
+pub enum OrderType {
+    Limit = 1,
+    PostOnly = 2,
+    TransactOrCancelInstantly = 3,
+    TransactCompletelyOrCancelCompletely = 4,
+    Market = 5,
+    ConvertMarketToCurrentPrice = 6
+}
+
+#[derive(Debug, Deserialize)]
+pub struct FuturesOrder {
+    pub category: i64,
+    #[serde(rename = "createTime")]
+    pub create_time: u128,
+    #[serde(rename = "dealAvgPrice", deserialize_with = "parse_string_to_f64")]
+    pub deal_avg_price: f64,
+    #[serde(rename = "dealAvgPriceStr")]
+    pub deal_avg_price_str: String,
+    #[serde(rename = "dealVol")]
+    pub deal_vol: i64,
+    #[serde(rename = "errorCode")]
+    pub error_code: i64,
+    #[serde(rename = "externalOid")]
+    pub external_oid: String,
+    #[serde(rename = "feeCurrency")]
+    pub fee_currency: String,
+    pub leverage: u64,
+    #[serde(rename = "makerFee")]
+    pub maker_fee: f64,
+    #[serde(rename = "openType")]
+    pub open_type: OpenType,
+    #[serde(rename = "orderId")]
+    pub order_id: String,
+    #[serde(rename = "orderMargin", deserialize_with = "parse_string_to_f64")]
+    pub order_margin: f64,
+    #[serde(rename = "orderType")]
+    pub order_type: OrderType,
+    #[serde(rename = "positionId")]
+    pub position_id: i64,
+    #[serde(rename = "positionMode")]
+    pub position_mode: i64,
+    #[serde(deserialize_with = "parse_string_to_f64")]
+    pub price: f64,
+    #[serde(rename = "priceStr")]
+    pub price_str: String,
+    pub profit: f64,
+    #[serde(rename = "showCancelReason")]
+    pub show_cancel_reason: i64,
+    #[serde(rename = "showProfitRateShare")]
+    pub show_profit_rate_share: i64,
+    pub side: OrderDirection,
+    pub state: i64,
+    pub symbol: String,
+    #[serde(rename = "takerFee")]
+    pub taker_fee: f64,
+    #[serde(rename = "updateTime")]
+    pub update_time: u128,
+    #[serde(rename = "usedMargin")]
+    pub used_margin: f64,
+    pub version: i64,
+    pub vol: i64,
 }
