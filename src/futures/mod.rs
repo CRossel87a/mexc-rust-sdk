@@ -220,28 +220,32 @@ impl MexcFutures {
         let positions = open_positions.iter().find(|p| p.symbol.eq(symbol) && p.leverage == leverage && p.open_type.eq(&open_type));
 
         let mut orders = vec![];
+        let mut futures = vec![];
 
         if let Some(position) = positions.filter(|p| p.position_type.ne(&direction)) {
 
             let side = if direction.eq(&PositionType::Long) { OrderDirection::CloseShort } else { OrderDirection::CloseLong };
 
             if position.hold_vol >= contract_units {
-                
-                let order = self.submit_order(symbol, contract_units, price, leverage, side, open_type, order_type).await?;
-                orders.push(order);
+
+                futures.push(self.submit_order(symbol, contract_units, price, leverage, side, open_type, order_type));
                 contract_units = 0;
 
             } else {
-                let order = self.submit_order(symbol, position.hold_vol, price, leverage, side, open_type, order_type).await?;
-                orders.push(order);
+                futures.push(self.submit_order(symbol, position.hold_vol, price, leverage, side, open_type, order_type));
                 contract_units -= position.hold_vol;
             }
         } 
 
         if contract_units > 0 {
             let side = if direction.eq(&PositionType::Long) { OrderDirection::OpenLong } else { OrderDirection::OpenShort };
-            let order = self.submit_order(symbol, contract_units, price, leverage, side, open_type, order_type).await?;
-            orders.push(order);
+            futures.push(self.submit_order(symbol, contract_units, price, leverage, side, open_type, order_type));
+        }
+
+        let results = futures::future::join_all(futures).await;
+
+        for result in results.into_iter() {
+            orders.push(result?);
         }
 
         Ok(orders)
@@ -479,7 +483,7 @@ mod tests {
         let client = MexcFutures::new(Some(key),Some(secret),Some(web_token), None).unwrap();
 
         let symbol = "BTC_USDT";
-        let q = 0.0020;
+        let q = 0.005;
         let price = None; //Some(3650.13);
 
         let i = client.get_contract_details(symbol).await.unwrap();
@@ -488,7 +492,10 @@ mod tests {
 
         println!("contract_units: {contract_units}");
 
-        let receipts = client.submit_directional_orders(symbol, contract_units, price, 4, PositionType::Long, OpenType::Cross, OrderType::Market).await.unwrap();
+        let latency = Instant::now();
+
+        let receipts = client.submit_directional_orders(symbol, contract_units, price, 4, PositionType::Short, OpenType::Cross, OrderType::Market).await.unwrap();
+        dbg!(latency.elapsed()); // latency.elapsed() = 1.4562507s, latency.elapsed() = 1.1419579s with futures join all
         dbg!(receipts);
     }
 
