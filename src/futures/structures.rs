@@ -2,7 +2,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use serde_repr::Deserialize_repr;
 use crate::utils::parse_string_to_f64;
-
+use std::fmt;
 
 #[derive(Deserialize, Debug)]
 pub struct FuturesBalance {
@@ -314,10 +314,28 @@ pub enum OrderDirection {
 }
 
 #[repr(u64)]
-#[derive(Deserialize_repr, Debug, PartialEq, Clone, Copy)]
+#[derive(Deserialize_repr, Debug, PartialEq, Clone, Copy, Hash, Eq)]
 pub enum PositionType {
     Long = 1,
     Short = 2,
+}
+
+impl PositionType {
+    pub fn inverse(&self) -> Self {
+        match self {
+            PositionType::Long => PositionType::Short,
+            PositionType::Short => PositionType::Long,
+        }
+    }
+}
+
+impl fmt::Display for PositionType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PositionType::Long => write!(f, "Long"),
+            PositionType::Short => write!(f, "Short"),
+        }
+    }
 }
 
 #[repr(u64)]
