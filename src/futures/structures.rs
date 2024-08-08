@@ -82,7 +82,7 @@ pub struct FuturesPosition {
     pub im: f64,
     pub leverage: u64,
 
-    pub pnl: Option<String>,
+    pub pnl: Option<f64>,
 
     #[serde(rename = "liquidatePrice", deserialize_with = "parse_string_to_f64")]
     pub liquidate_price: f64,
@@ -460,7 +460,7 @@ mod tests {
     #[test]
     fn test_decode_structure() {
         let json = r#""#;
-        let data: FuturesAsset = serde_json::from_str(&json).unwrap();
+        let data: FuturesPosition = serde_json::from_str(&json).unwrap();
         dbg!(data);
     }
 
