@@ -314,6 +314,17 @@ pub enum OrderDirection {
     CloseLong = 4,
 }
 
+impl OrderDirection {
+    pub fn position_type(&self) -> PositionType {
+        match self {
+            OrderDirection::CloseLong => PositionType::Short,
+            OrderDirection::CloseShort => PositionType::Long,
+            OrderDirection::OpenLong => PositionType::Long,
+            OrderDirection::OpenShort => PositionType::Short
+        }
+    }
+}
+
 #[repr(u64)]
 #[derive(Deserialize_repr, Debug, PartialEq, Clone, Copy, Hash, Eq)]
 pub enum PositionType {
