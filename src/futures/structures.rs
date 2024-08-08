@@ -363,8 +363,6 @@ pub struct FuturesOrder {
     pub create_time: u128,
     #[serde(rename = "dealAvgPrice", deserialize_with = "parse_string_to_f64")]
     pub deal_avg_price: f64,
-    #[serde(rename = "dealAvgPriceStr")]
-    pub deal_avg_price_str: String,
     #[serde(rename = "dealVol")]
     pub deal_vol: u64,
     #[serde(rename = "errorCode")]
@@ -391,12 +389,7 @@ pub struct FuturesOrder {
     #[serde(deserialize_with = "parse_string_to_f64")]
     pub price: f64,
     #[serde(rename = "priceStr")]
-    pub price_str: String,
     pub profit: f64,
-    #[serde(rename = "showCancelReason")]
-    pub show_cancel_reason: i64,
-    #[serde(rename = "showProfitRateShare")]
-    pub show_profit_rate_share: i64,
     pub side: OrderDirection,
     pub state: i64,
     pub symbol: String,
