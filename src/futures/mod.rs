@@ -376,6 +376,29 @@ impl MexcFutures {
     }
 
     */
+
+    pub fn create_websocket_login_statement(&self) -> anyhow::Result<String> {
+
+        let api_key = self.api_key.as_ref().ok_or_else(|| anyhow!("Missing api key"))?;
+        let timestamp = get_timestamp();
+        let signature = self.sign_v1(timestamp, None)?;
+
+        let cmd = json!({
+            "method": "login",
+            "param" : {
+                "apiKey": api_key,
+                "reqTime": timestamp.to_string(),
+                "signature": signature
+            }
+        });
+        Ok(cmd.to_string())
+    }
+    
+    pub fn create_websocket_ping_statement(&self) -> String {
+        json!({
+            "method": "ping"
+        }).to_string()
+    }
 }
 
 
@@ -531,4 +554,12 @@ mod tests {
         // deal columns for execute price info
         // taker_fee: 0.0049071
     } */
+
+    #[tokio::test]
+    pub async fn test_futures_websocket_login() {
+        let (key, secret) = unlock_keys().unwrap();
+        let client = MexcFutures::new(Some(key),Some(secret),None, None).unwrap();
+        let json = client.create_websocket_login_statement().unwrap();
+        println!("{json}");
+    }
 }
