@@ -82,6 +82,8 @@ pub struct FuturesPosition {
     pub im: f64,
     pub leverage: u64,
 
+    pub pnl: Option<String>,
+
     #[serde(rename = "liquidatePrice", deserialize_with = "parse_string_to_f64")]
     pub liquidate_price: f64,
 
@@ -112,8 +114,7 @@ pub struct FuturesPosition {
     #[serde(rename = "positionType")]
     pub position_type: PositionType,
 
-    #[serde(rename = "profitRatio", deserialize_with = "parse_string_to_f64")]
-    pub profit_ratio: f64,
+    pub profit_ratio: Option<String>,
 
     #[serde(deserialize_with = "parse_string_to_f64")]
     pub realised: f64,
@@ -400,4 +401,67 @@ pub struct FuturesOrder {
     pub used_margin: f64,
     pub version: i64,
     pub vol: i64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct FuturesDeal {
+    pub category: i64,
+    #[serde(rename = "externalOid")]
+    pub external_oid: String,
+    #[serde(rename = "feeCurrency")]
+    pub fee_currency: String,
+
+    #[serde(rename = "orderId")]
+    pub order_id: String,
+
+    #[serde(rename = "isSelf")]
+    pub is_self: bool,
+
+    #[serde(rename = "taker")]
+    pub is_taker: bool,
+
+    #[serde(rename = "positionMode")]
+    pub position_mode: i64,
+    #[serde(deserialize_with = "parse_string_to_f64")]
+    pub price: f64,
+    pub profit: f64,
+    pub side: OrderDirection,
+    pub symbol: String,
+    pub fee: f64,
+    pub timestamp: u128,
+    pub vol: u64,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct FuturesAsset {
+    pub currency: String,
+
+    #[serde(rename = "positionMargin")]
+    #[serde(deserialize_with = "parse_string_to_f64")]
+    pub position_margin: f64,
+
+    #[serde(rename = "availableBalance")]
+    #[serde(deserialize_with = "parse_string_to_f64")]
+    pub available_balance: f64,
+
+    #[serde(rename = "frozenBalance")]
+    #[serde(deserialize_with = "parse_string_to_f64")]
+    pub frozen_balance: f64,
+
+    #[serde(deserialize_with = "parse_string_to_f64")]
+    pub bonus: f64,
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_decode_structure() {
+        let json = r#""#;
+        let data: FuturesAsset = serde_json::from_str(&json).unwrap();
+        dbg!(data);
+    }
+
 }

@@ -393,7 +393,7 @@ impl MexcFutures {
         });
         Ok(cmd.to_string())
     }
-    
+
     pub fn create_websocket_ping_statement(&self) -> String {
         json!({
             "method": "ping"
