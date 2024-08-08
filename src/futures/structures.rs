@@ -388,7 +388,6 @@ pub struct FuturesOrder {
     pub position_mode: i64,
     #[serde(deserialize_with = "parse_string_to_f64")]
     pub price: f64,
-    #[serde(rename = "priceStr")]
     pub profit: f64,
     pub side: OrderDirection,
     pub state: i64,
