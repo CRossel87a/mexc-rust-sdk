@@ -201,8 +201,16 @@ impl MexcFutures {
         headers.insert("origin", HeaderValue::from_static("https://futures.mexc.com"));
         headers.insert("referer", HeaderValue::from_static("https://futures.mexc.com/exchange"));
 
+        let txt = self.client.post(url).headers(headers).json(&params).send().await?.text().await?;
 
-        let resp: FuturesResponse = self.client.post(url).headers(headers).json(&params).send().await?.json().await?;
+        let result: Result<FuturesResponse,serde_json::Error> = serde_json::from_str(&txt);
+
+        let resp = match result {
+            Ok(resp) => resp,
+            Err(_) => {
+                bail!("Bad web token");
+            }
+        };
 
         if !resp.success {
             bail!("mexc futures err resp: {:?}", resp.message);
@@ -492,7 +500,7 @@ mod tests {
 
         println!("contract_units: {contract_units}");
 
-        let receipt = client.submit_order(symbol, contract_units, price, 4, OrderDirection::CloseShort, OpenType::Cross, OrderType::Market).await.unwrap();
+        let receipt = client.submit_order(symbol, contract_units, price, 4, OrderDirection::OpenLong, OpenType::Cross, OrderType::Market).await.unwrap();
         dbg!(receipt);
     }
 
